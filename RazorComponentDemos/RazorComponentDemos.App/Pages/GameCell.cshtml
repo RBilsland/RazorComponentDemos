@@ -1,0 +1,50 @@
+﻿@page "/gamecell"
+<span class="@(currentState ? "CellAlive" : "CellDead")" onclick="@ToggleState" />
+@functions {
+    [Parameter] List<GameCell> CellList { get; set; }
+
+    public List<GameCell> neighbours = new List<GameCell>();
+    public bool currentState = false;
+    public bool nextState = false;
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+
+        RandomState();
+
+        CellList.Add(this);
+    }
+
+    public void CalculateNextState()
+    {
+        int activeNeighbourCount = neighbours
+            .Where(Neighbour => Neighbour.currentState)
+            .Count();
+
+        nextState = currentState
+            ? activeNeighbourCount == 2 || activeNeighbourCount == 3
+            : activeNeighbourCount == 3;
+    }
+
+    public void UpdateCurrentState()
+    {
+        currentState = nextState;
+    }
+
+    public void ClearState()
+    {
+        currentState = false;
+    }
+
+    public void RandomState()
+    {
+        Random rnd = new Random();
+        currentState = rnd.Next(5) == 0;
+    }
+
+    void ToggleState()
+    {
+        currentState = !currentState;
+    }
+}

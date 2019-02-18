@@ -1,0 +1,37 @@
+﻿@page "/game"
+<style>
+    .GameOfLife {
+        padding: 0px;
+        clear: left;
+        max-width: 600px;
+    }
+
+    .GameOfLife > span {
+        display: block;
+        float: left;
+        width: 10px;
+        height: 10px;
+        border: 1px solid black;
+        margin: 0px;
+        padding: 0px;
+    }
+
+    .GameOfLife > span.CellAlive {
+        background-color: black;
+    }
+
+    .GameOfLife > span.CellDead {
+        background-color: white;
+    }
+
+    .GameOfLife > button {
+        float: left;
+        margin: 4px 4px 0px 0px;
+    }
+
+    .GameOfLife > .Instructions {
+        clear: both;
+    }
+</style>
+<h2>Conway's Game of Life</h2>
+<GameOfLife Rows="40" Columns="60" Theme="GameOfLife" />

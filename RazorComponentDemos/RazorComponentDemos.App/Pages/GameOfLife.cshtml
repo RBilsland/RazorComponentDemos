@@ -1,0 +1,98 @@
+﻿@page "/gameoflife"
+
+<div class="@Theme">
+    @for (var count = 0; count < Rows * Columns; count++)
+    {
+        <GameCell CellList="@cellList" />
+    }
+    <button onclick="@ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
+    <button onclick="@ClearGrid">Clear Grid</button>
+    <button onclick="@RandomizeGrid">Randomize Grid</button>
+    <div class="Instructions">Click a cell to toggle its state</div>
+</div>
+
+@functions {
+    [Parameter] int Rows { get; set; } = 10;
+    [Parameter] int Columns { get; set; } = 10;
+    [Parameter] string Theme { get; set; } = "";
+
+    List<GameCell> cellList = new List<GameCell>();
+    GameCell dummyCell = new GameCell();
+    int[] rowAdjustment;
+    int[] columnAdjustment;
+    bool running = false;
+
+    protected override void OnAfterRender()
+    {
+        base.OnAfterRender();
+
+        rowAdjustment = new int[] { -Columns, 0, Columns };
+        columnAdjustment = new int[] { -1, 0, 1 };
+
+        for (var count = 0; count < cellList.Count(); count++)
+        {
+            cellList[count].neighbours = CalculateNeighbours(count);
+        }
+    }
+
+    List<GameCell> CalculateNeighbours(int Position)
+    {
+        List<GameCell> returnList = new List<GameCell>();
+
+        rowAdjustment
+            .SelectMany(ra => columnAdjustment, (ra, ca) => new { ra, ca })
+            .Where(r => r.ra != 0 || r.ca != 0)
+            .ToList()
+            .ForEach(r =>
+            {
+                returnList.Add(CalculateNeighbour(Position + r.ra, r.ca));
+            });
+
+        return returnList;
+    }
+
+    GameCell CalculateNeighbour(int RowPosition, int ColumnAdjustment)
+    {
+        int newRowOffset = (RowPosition % Columns) + ColumnAdjustment;
+
+        return RowPosition < 0 || RowPosition >= cellList.Count() || newRowOffset < 0 || newRowOffset >= Columns
+            ? dummyCell
+            : cellList[RowPosition + ColumnAdjustment];
+    }
+
+    void ToggleRunningState()
+    {
+        running = !running;
+
+        CheckRunningState();
+    }
+
+    [JSInvokable]
+    public void CheckRunningState()
+    {
+        if (running)
+        {
+            NextGeneration();
+        }
+    }
+
+    async void NextGeneration()
+    {
+        cellList.ForEach(Cell => Cell.CalculateNextState());
+        cellList.ForEach(Cell => Cell.UpdateCurrentState());
+
+        this.StateHasChanged();
+
+        await JsInterop.CallCheckRunningState(this);
+    }
+
+    void ClearGrid()
+    {
+        cellList.ForEach(Cell => Cell.ClearState());
+    }
+
+    void RandomizeGrid()
+    {
+        cellList.ForEach(Cell => Cell.RandomState());
+    }
+}
