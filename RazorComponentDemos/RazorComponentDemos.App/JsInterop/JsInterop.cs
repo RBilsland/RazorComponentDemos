@@ -1,6 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using System.Threading.Tasks;
-using RazorComponentDemos.App.Pages;
+using RazorComponentDemos.App.Pages.GameOfLife;
 
 public class JsInterop
 {

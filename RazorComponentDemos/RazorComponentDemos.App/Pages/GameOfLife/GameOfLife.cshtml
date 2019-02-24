@@ -1,19 +1,47 @@
 ﻿@page "/gameoflife"
+<style>
+    .GameBase {
+        padding: 0px;
+        clear: left;
+    }
 
-<div class="@Theme">
+    .GameBase > div.Cell {
+        float: left;
+        margin: 0px;
+        padding: 0px;
+    }
+
+    .GameBase > div.Cell:nth-child(@(Columns + "n+1")) {
+        clear: left;
+    }
+
+    .GameBase > button {
+        float: left;
+        margin: 0px 4px 0px 0px;
+    }
+
+    .GameBase > .Controls {
+        padding: 4px 0px 0px 0px;
+        clear: both;
+    }
+</style>
+<div class="GameBase @Theme">
     @for (var count = 0; count < Rows * Columns; count++)
     {
         <GameCell CellList="@cellList" />
     }
-    <button onclick="@ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
-    <button onclick="@ClearGrid">Clear Grid</button>
-    <button onclick="@RandomizeGrid">Randomize Grid</button>
+    <div class="Controls">
+        <button onclick="@ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
+        <button onclick="@ClearGrid">Clear Grid</button>
+        <button onclick="@RandomizeGrid">Randomize Grid</button>
+    </div>
     <div class="Instructions">Click a cell to toggle its state</div>
 </div>
 
 @functions {
     [Parameter] int Rows { get; set; } = 10;
     [Parameter] int Columns { get; set; } = 10;
+    [Parameter] bool WrapAround { get; set; } = true;
     [Parameter] string Theme { get; set; } = "";
 
     List<GameCell> cellList = new List<GameCell>();
@@ -21,7 +49,7 @@
     int[] rowAdjustment;
     int[] columnAdjustment;
     bool running = false;
-
+    
     protected override void OnAfterRender()
     {
         base.OnAfterRender();
@@ -45,17 +73,37 @@
             .ToList()
             .ForEach(r =>
             {
-                returnList.Add(CalculateNeighbour(Position + r.ra, r.ca));
+                returnList.Add(CalculateNeighbour(WrapAroundRowCheck(Position, r.ra), WrapAroundColumnCheck(Position, r.ca)));
             });
 
         return returnList;
     }
 
+    int WrapAroundRowCheck(int Position, int RowAdjustment)
+    {
+        return WrapAround
+            ? Position + RowAdjustment < 0
+                ? Position + RowAdjustment + cellList.Count()
+                : Position + RowAdjustment >= cellList.Count()
+                    ? Position + RowAdjustment - cellList.Count()
+                    : Position + RowAdjustment
+            : Position + RowAdjustment;
+    }
+
+    int WrapAroundColumnCheck(int Position, int ColumnAdjustment)
+    {
+        return WrapAround
+            ? (Position % Columns) + ColumnAdjustment < 0
+                ? ColumnAdjustment + Columns
+                : (Position % Columns) + ColumnAdjustment >= Columns
+                    ? ColumnAdjustment - Columns
+                    : ColumnAdjustment
+            : ColumnAdjustment;
+    }
+
     GameCell CalculateNeighbour(int RowPosition, int ColumnAdjustment)
     {
-        int newRowOffset = (RowPosition % Columns) + ColumnAdjustment;
-
-        return RowPosition < 0 || RowPosition >= cellList.Count() || newRowOffset < 0 || newRowOffset >= Columns
+        return RowPosition < 0 || RowPosition >= cellList.Count() || (RowPosition % Columns) + ColumnAdjustment < 0 || (RowPosition % Columns) + ColumnAdjustment >= Columns
             ? dummyCell
             : cellList[RowPosition + ColumnAdjustment];
     }

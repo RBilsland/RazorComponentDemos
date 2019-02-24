@@ -1,0 +1,18 @@
+﻿@page "/game"
+<style>
+    .GameOfLife > div.Cell {
+        width: 10px;
+        height: 10px;
+        border: 1px solid LightGray;
+    }
+
+    .GameOfLife > div.CellAlive {
+        background-color: black;
+    }
+
+    .GameOfLife > div.CellDead {
+        background-color: white;
+    }
+</style>
+<h2>Conway's Game of Life</h2>
+<GameOfLife Rows="40" Columns="60" WrapAround="true" Theme="GameOfLife" />

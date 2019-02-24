@@ -1,5 +1,5 @@
 ﻿@page "/gamecell"
-<span class="@(currentState ? "CellAlive" : "CellDead")" onclick="@ToggleState" />
+<div class="Cell @(currentState ? "CellAlive" : "CellDead")" onclick="@ToggleState" />
 @functions {
     [Parameter] List<GameCell> CellList { get; set; }
 
