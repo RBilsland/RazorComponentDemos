@@ -1,4 +1,5 @@
 ﻿@page "/gameoflife"
+@inject IJSRuntime JsRuntime
 <style>
     .GameBase {
         padding: 0px;
@@ -28,28 +29,38 @@
 <div class="GameBase @Theme">
     @for (var count = 0; count < Rows * Columns; count++)
     {
-        <GameCell CellList="@cellList" />
+        <GameCell position="@count" onAddCellToList="@AddCellToList" />
     }
     <div class="Controls">
-        <button onclick="@ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
-        <button onclick="@ClearGrid">Clear Grid</button>
-        <button onclick="@RandomizeGrid">Randomize Grid</button>
+        <button @onclick="ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
+        <button @onclick="ClearGrid">Clear Grid</button>
+        <button @onclick="RandomizeGrid">Randomize Grid</button>
     </div>
     <div class="Instructions">Click a cell to toggle its state</div>
 </div>
+@code {
+    [Parameter]
+    int Rows { get; set; } = 10;
+    [Parameter]
+    int Columns { get; set; } = 10;
+    [Parameter]
+    bool WrapAround { get; set; } = true;
+    [Parameter]
+    string Theme { get; set; } = "";
 
-@functions {
-    [Parameter] int Rows { get; set; } = 10;
-    [Parameter] int Columns { get; set; } = 10;
-    [Parameter] bool WrapAround { get; set; } = true;
-    [Parameter] string Theme { get; set; } = "";
-
-    List<GameCell> cellList = new List<GameCell>();
+    GameCell[] cellList = new GameCell[0];
     GameCell dummyCell = new GameCell();
     int[] rowAdjustment;
     int[] columnAdjustment;
     bool running = false;
-    
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+
+        Array.Resize(ref cellList, Rows * Columns);
+    }
+
     protected override void OnAfterRender()
     {
         base.OnAfterRender();
@@ -57,10 +68,12 @@
         rowAdjustment = new int[] { -Columns, 0, Columns };
         columnAdjustment = new int[] { -1, 0, 1 };
 
-        for (var count = 0; count < cellList.Count(); count++)
-        {
-            cellList[count].neighbours = CalculateNeighbours(count);
-        }
+        Array.ForEach<GameCell>(cellList, cell => cell.neighbours = CalculateNeighbours(Array.IndexOf(cellList, cell)));
+    }
+
+    void AddCellToList((int position, GameCell cellToAdd) returned)
+    {
+        cellList[returned.position] = returned.cellToAdd;
     }
 
     List<GameCell> CalculateNeighbours(int Position)
@@ -77,6 +90,13 @@
             });
 
         return returnList;
+    }
+
+    GameCell CalculateNeighbour(int RowPosition, int ColumnAdjustment)
+    {
+        return RowPosition < 0 || RowPosition >= cellList.Count() || (RowPosition % Columns) + ColumnAdjustment < 0 || (RowPosition % Columns) + ColumnAdjustment >= Columns
+            ? dummyCell
+            : cellList[RowPosition + ColumnAdjustment];
     }
 
     int WrapAroundRowCheck(int Position, int RowAdjustment)
@@ -101,13 +121,6 @@
             : ColumnAdjustment;
     }
 
-    GameCell CalculateNeighbour(int RowPosition, int ColumnAdjustment)
-    {
-        return RowPosition < 0 || RowPosition >= cellList.Count() || (RowPosition % Columns) + ColumnAdjustment < 0 || (RowPosition % Columns) + ColumnAdjustment >= Columns
-            ? dummyCell
-            : cellList[RowPosition + ColumnAdjustment];
-    }
-
     void ToggleRunningState()
     {
         running = !running;
@@ -126,21 +139,23 @@
 
     async void NextGeneration()
     {
-        cellList.ForEach(Cell => Cell.CalculateNextState());
-        cellList.ForEach(Cell => Cell.UpdateCurrentState());
+        Array.ForEach<GameCell>(cellList, cell => cell.CalculateNextState());
+        Array.ForEach<GameCell>(cellList, cell => cell.UpdateCurrentState());
 
         this.StateHasChanged();
 
-        await JsInterop.CallCheckRunningState(this);
+        await JsRuntime.InvokeAsync<object>(
+        "jsFunctions.checkRunningState",
+        DotNetObjectRef.Create(this));
     }
 
     void ClearGrid()
     {
-        cellList.ForEach(Cell => Cell.ClearState());
+        Array.ForEach<GameCell>(cellList, cell => cell.ClearState());
     }
 
     void RandomizeGrid()
     {
-        cellList.ForEach(Cell => Cell.RandomState());
+        Array.ForEach<GameCell>(cellList, cell => cell.RandomState());
     }
 }

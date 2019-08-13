@@ -1,19 +1,22 @@
 ﻿@page "/gamecell"
-<div class="Cell @(currentState ? "CellAlive" : "CellDead")" onclick="@ToggleState" />
-@functions {
-    [Parameter] List<GameCell> CellList { get; set; }
+<div class="Cell @(currentState ? "CellAlive" : "CellDead")" @onclick=@(() => ToggleState()) />
+@code {
+    [Parameter]
+    int position { get; set; } = 0;
+    [Parameter]
+    EventCallback<(int position, GameCell cellToAdd)> onAddCellToList { get; set; }
 
     public List<GameCell> neighbours = new List<GameCell>();
     public bool currentState = false;
-    public bool nextState = false;
+    bool nextState = false;
 
-    protected override void OnInit()
+    protected async override void OnInit()
     {
         base.OnInit();
 
         RandomState();
 
-        CellList.Add(this);
+        await onAddCellToList.InvokeAsync((position, this));
     }
 
     public void CalculateNextState()
@@ -43,7 +46,7 @@
         currentState = rnd.Next(5) == 0;
     }
 
-    void ToggleState()
+    public void ToggleState()
     {
         currentState = !currentState;
     }
