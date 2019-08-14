@@ -54,9 +54,9 @@
     int[] columnAdjustment;
     bool running = false;
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
-        base.OnInit();
+        base.OnInitialized();
 
         Array.Resize(ref cellList, Rows * Columns);
     }
@@ -71,9 +71,9 @@
         Array.ForEach<GameCell>(cellList, cell => cell.neighbours = CalculateNeighbours(Array.IndexOf(cellList, cell)));
     }
 
-    void AddCellToList((int position, GameCell cellToAdd) returned)
+    void AddCellToList(GameCell cellToAdd)
     {
-        cellList[returned.position] = returned.cellToAdd;
+        cellList[cellToAdd.position] = cellToAdd;
     }
 
     List<GameCell> CalculateNeighbours(int Position)

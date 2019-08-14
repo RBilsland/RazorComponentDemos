@@ -2,21 +2,21 @@
 <div class="Cell @(currentState ? "CellAlive" : "CellDead")" @onclick=@(() => ToggleState()) />
 @code {
     [Parameter]
-    int position { get; set; } = 0;
+    public int position { get; set; } = 0;
     [Parameter]
-    EventCallback<(int position, GameCell cellToAdd)> onAddCellToList { get; set; }
+    EventCallback<GameCell> onAddCellToList { get; set; }
 
     public List<GameCell> neighbours = new List<GameCell>();
     public bool currentState = false;
     bool nextState = false;
 
-    protected async override void OnInit()
+    protected async override void OnInitialized()
     {
-        base.OnInit();
+        base.OnInitialized();
 
         RandomState();
 
-        await onAddCellToList.InvokeAsync((position, this));
+        await onAddCellToList.InvokeAsync(this);
     }
 
     public void CalculateNextState()
