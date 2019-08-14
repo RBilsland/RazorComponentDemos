@@ -4,7 +4,7 @@
     [Parameter]
     public int position { get; set; } = 0;
     [Parameter]
-    EventCallback<GameCell> onAddCellToList { get; set; }
+    public EventCallback<GameCell> onAddCellToList { get; set; }
 
     public List<GameCell> neighbours = new List<GameCell>();
     public bool currentState = false;

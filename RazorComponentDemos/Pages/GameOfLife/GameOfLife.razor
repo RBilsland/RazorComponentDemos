@@ -29,7 +29,7 @@
 <div class="GameBase @Theme">
     @for (var count = 0; count < Rows * Columns; count++)
     {
-        <GameCell position="@count" onAddCellToList="@AddCellToList" />
+        <GameCell position="@count" onAddCellToList="@onAddCellToList" />
     }
     <div class="Controls">
         <button @onclick="ToggleRunningState">@(running ? "Stop" : "Run") Game</button>
@@ -40,13 +40,13 @@
 </div>
 @code {
     [Parameter]
-    int Rows { get; set; } = 10;
+    public int Rows { get; set; } = 10;
     [Parameter]
-    int Columns { get; set; } = 10;
+    public int Columns { get; set; } = 10;
     [Parameter]
-    bool WrapAround { get; set; } = true;
+    public bool WrapAround { get; set; } = true;
     [Parameter]
-    string Theme { get; set; } = "";
+    public string Theme { get; set; } = "";
 
     GameCell[] cellList = new GameCell[0];
     GameCell dummyCell = new GameCell();
@@ -71,7 +71,7 @@
         Array.ForEach<GameCell>(cellList, cell => cell.neighbours = CalculateNeighbours(Array.IndexOf(cellList, cell)));
     }
 
-    void AddCellToList(GameCell cellToAdd)
+    void onAddCellToList(GameCell cellToAdd)
     {
         cellList[cellToAdd.position] = cellToAdd;
     }
