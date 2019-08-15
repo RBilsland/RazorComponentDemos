@@ -1,5 +1,5 @@
 ﻿@page "/gameoflife"
-@inject IJSRuntime JsRuntime
+@using System.Threading;
 <style>
     .GameBase {
         padding: 0px;
@@ -54,11 +54,15 @@
     int[] columnAdjustment;
     bool running = false;
 
+    Timer runningTimer;
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
         Array.Resize(ref cellList, Rows * Columns);
+
+        runningTimer = new Timer(NextGeneration, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     protected override void OnAfterRender()
@@ -125,28 +129,20 @@
     {
         running = !running;
 
-        CheckRunningState();
-    }
-
-    [JSInvokable]
-    public void CheckRunningState()
-    {
-        if (running)
+        if (running) {
+            runningTimer.Change(0, 250);
+        } else
         {
-            NextGeneration();
+            runningTimer.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
 
-    async void NextGeneration()
+    void NextGeneration(object state)
     {
         Array.ForEach<GameCell>(cellList, cell => cell.CalculateNextState());
         Array.ForEach<GameCell>(cellList, cell => cell.UpdateCurrentState());
 
-        this.StateHasChanged();
-
-        await JsRuntime.InvokeAsync<object>(
-        "jsFunctions.checkRunningState",
-        DotNetObjectRef.Create(this));
+        this.InvokeAsync(delegate() { this.StateHasChanged(); });
     }
 
     void ClearGrid()
